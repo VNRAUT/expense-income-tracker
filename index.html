@@ -16,74 +16,63 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; transition: 0.3s; overflow: hidden; }
         
-        #login-screen { position: fixed; inset: 0; background: var(--bg); display: flex; justify-content: center; align-items: center; z-index: 2000; }
-        .login-box { width: 85%; max-width: 350px; background: var(--card); padding: 40px 20px; border-radius: 24px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
-        .login-box input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--border); margin: 20px 0; background: var(--bg); color: var(--text); font-size: 1.1rem; text-align: center; }
+        /* Login Screen */
+        #login-screen { position: fixed; inset: 0; background: var(--bg); display: flex; justify-content: center; align-items: center; z-index: 2000; transition: opacity 0.5s; }
+        .login-box { width: 85%; max-width: 320px; background: var(--card); padding: 40px 20px; border-radius: 28px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); border: 1px solid var(--border); }
+        .login-box h2 { margin-bottom: 10px; font-size: 1.5rem; }
+        .pin-field { width: 100%; padding: 15px; border-radius: 16px; border: 2px solid var(--border); margin: 20px 0; background: var(--bg); color: var(--text); font-size: 1.5rem; text-align: center; letter-spacing: 15px; outline: none; transition: border-color 0.3s; }
+        .pin-field:focus { border-color: var(--primary); }
 
-        #app-content { display: none; height: 100vh; flex-direction: column; }
-        .tab-content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; display: none; animation: fadeIn 0.4s ease; }
-        .active-tab { display: block; }
+        /* App Structure */
+        #app-content { display: none; height: 100vh; flex-direction: column; opacity: 0; transition: opacity 0.5s; }
+        .tab-content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; display: none; }
+        .active-tab { display: block; animation: slideUp 0.4s ease; }
 
-        .balance-card { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); color: white; padding: 30px 20px; border-radius: 24px; margin-bottom: 20px; position: relative; overflow: hidden; }
-        
-        .insight-card { background: #e0e7ff; color: #4338ca; padding: 15px; border-radius: 16px; margin-bottom: 20px; font-size: 0.85rem; display: flex; align-items: center; gap: 10px; border: 1px solid #c7d2fe; }
-        [data-theme="dark"] .insight-card { background: #312e81; color: #e0e7ff; border: none; }
+        .balance-card { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); color: white; padding: 30px 20px; border-radius: 24px; margin-bottom: 20px; box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2); }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid var(--border); }
+        .nav-item { cursor: pointer; text-align: center; color: #9ca3af; font-size: 0.7rem; flex: 1; transition: 0.2s; }
+        .nav-item.active { color: var(--primary); transform: translateY(-2px); }
+        .nav-item span { display: block; font-size: 1.4rem; }
 
-        .budget-card { background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid var(--border); margin-bottom: 20px; }
-        .prog-bg { width: 100%; height: 8px; background: var(--border); border-radius: 4px; margin: 12px 0; overflow: hidden; }
-        .prog-fill { height: 100%; width: 0%; background: var(--primary); transition: width 0.8s ease; }
-
-        .nav-bar { position: fixed; bottom: 0; width: 100%; background: var(--card); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid var(--border); box-shadow: 0 -5px 15px rgba(0,0,0,0.05); }
-        .nav-item { cursor: pointer; text-align: center; color: #9ca3af; font-size: 0.7rem; transition: 0.2s; flex: 1; }
-        .nav-item.active { color: var(--primary); font-weight: bold; }
-        .nav-item span { display: block; font-size: 1.5rem; margin-bottom: 2px; }
-
-        .btn { border: none; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: transform 0.1s; width: 100%; margin-top: 10px; }
-        .btn:active { transform: scale(0.96); }
+        .btn { border: none; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; transition: 0.2s; }
         .btn-primary { background: var(--primary); color: white; }
-        .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
-        
+        .btn-primary:active { transform: scale(0.98); }
+
         .list-item { background: var(--card); padding: 15px; border-radius: 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); }
         
-        select, input[type="date"], input[type="number"], input[type="month"] { width: 100%; padding: 12px; margin: 8px 0 15px 0; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); color: var(--text); }
+        input, select { width: 100%; padding: 12px; margin: 8px 0 15px 0; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); color: var(--text); font-size: 1rem; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body>
+<body onload="checkAutoLogin()">
 
 <div id="login-screen">
     <div class="login-box">
-        <h2 id="greeting">Welcome</h2>
-        <input type="password" id="pin" placeholder="Enter PIN" maxlength="4">
-        <button class="btn btn-primary" onclick="unlock()">Unlock</button>
+        <h2>🔒 Unlock</h2>
+        <p style="color: #6b7280; font-size: 0.9rem;">Enter your 4-digit PIN</p>
+        <input type="password" id="pin-input" class="pin-field" inputmode="numeric" maxlength="4" placeholder="••••" oninput="autoLoginCheck()">
     </div>
 </div>
 
 <div id="app-content">
     <div style="padding: 20px; display: flex; justify-content: space-between; align-items: center;">
-        <h3 id="app-title">Dashboard</h3>
-        <span onclick="toggleMode()" style="cursor:pointer; font-size:1.2rem;" id="mode-icon">🌙</span>
+        <h3 id="app-title" style="margin:0;">Dashboard</h3>
+        <span onclick="toggleMode()" style="cursor:pointer; font-size:1.2rem; filter: grayscale(1);" id="mode-icon">🌙</span>
     </div>
 
     <div id="tab-home" class="tab-content active-tab">
         <div class="balance-card">
-            <small style="opacity: 0.8;">Current Balance</small>
-            <h1 id="total-balance" style="margin: 5px 0;">₹0.00</h1>
+            <small style="opacity:0.8">Available Balance</small>
+            <h1 id="total-balance" style="margin:5px 0; font-size: 2.2rem;">₹0.00</h1>
         </div>
-        <div id="insight-box" class="insight-card"><span>💡</span> <span id="insight-text">Welcome back!</span></div>
-        <div class="budget-card">
-            <div style="display: flex; justify-content: space-between;"><span style="font-size: 0.9rem; font-weight: 600;">Monthly Budget</span><span id="budget-percent">0%</span></div>
-            <div class="prog-bg"><div id="prog-bar" class="prog-fill"></div></div>
-            <small id="budget-info">Spent ₹0 of ₹0</small>
-        </div>
-        <div style="height: 200px; margin-top: 20px;"><canvas id="mainChart"></canvas></div>
+        <div style="height: 250px; margin-top: 20px;"><canvas id="mainChart"></canvas></div>
     </div>
 
     <div id="tab-add" class="tab-content">
-        <div class="budget-card">
+        <div style="background:var(--card); padding:20px; border-radius:24px; border:1px solid var(--border);">
             <label>Date</label><input type="date" id="t-date">
-            <label>Type</label><select id="t-type" onchange="loadCats()"><option value="expense">Expense (-)</option><option value="income">Income (+)</option></select>
+            <label>Type</label><select id="t-type" onchange="loadCats()"><option value="expense">Expense</option><option value="income">Income</option></select>
             <label>Category</label><select id="t-cat"></select>
             <label>Amount (₹)</label><input type="number" id="t-amount" placeholder="0.00">
             <button class="btn btn-primary" onclick="saveEntry()">Save Transaction</button>
@@ -91,119 +80,4 @@
     </div>
 
     <div id="tab-history" class="tab-content">
-        <input type="text" id="hist-search" placeholder="Search categories..." onkeyup="refreshUI()" style="margin-bottom: 15px; width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text);">
-        <div id="history-list"></div>
-    </div>
-
-    <div id="tab-settings" class="tab-content">
-        <h4>Budget Setting</h4>
-        <div class="budget-card">
-            <label>Monthly Limit (₹)</label>
-            <input type="number" id="set-budget" onchange="saveBudget()">
-        </div>
-
-        <h4>Historical Data Export</h4>
-        <div class="budget-card">
-            <label>Download Specific Month</label>
-            <input type="month" id="export-month">
-            <button class="btn btn-primary" onclick="downloadMonthlyCSV()">Download Monthly Report</button>
-            <button class="btn btn-outline" onclick="downloadCSV()">Download All-Time CSV</button>
-        </div>
-
-        <button class="btn" style="background:#ef4444; color:white; margin-top: 30px;" onclick="resetAll()">Reset All Data</button>
-    </div>
-
-    <div class="nav-bar">
-        <div class="nav-item active" onclick="switchTab('home', this)"><span>🏠</span>Home</div>
-        <div class="nav-item" onclick="switchTab('add', this)"><span>➕</span>Add</div>
-        <div class="nav-item" onclick="switchTab('history', this)"><span>📜</span>History</div>
-        <div class="nav-item" onclick="switchTab('settings', this)"><span>⚙️</span>Settings</div>
-    </div>
-</div>
-
-<script>
-    const PIN = "2022";
-    let data = JSON.parse(localStorage.getItem('fin_data')) || [];
-    let budget = localStorage.getItem('fin_budget') || 10000;
-    let myChart = null;
-
-    function unlock() {
-        if (document.getElementById('pin').value === PIN) {
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('app-content').style.display = 'flex';
-            document.getElementById('set-budget').value = budget;
-            // Set export month to current month by default
-            const now = new Date();
-            document.getElementById('export-month').value = now.toISOString().slice(0, 7);
-            loadCats(); refreshUI();
-        } else alert("Wrong PIN!");
-    }
-
-    function switchTab(tab, el) {
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.getElementById('tab-' + tab).classList.add('active-tab');
-        el.classList.add('active');
-        document.getElementById('app-title').innerText = tab.charAt(0).toUpperCase() + tab.slice(1);
-        if(tab === 'home') refreshUI();
-    }
-
-    const cats = {
-        expense: ['🍱 Food', '🏠 Rent', '🚗 Travel', '🛍️ Shopping', '💊 Health', '🛠️ Other'],
-        income: ['💰 Salary', '📈 Freelance', '🏦 Dividend', '🎁 Other']
-    };
-
-    function loadCats() {
-        const type = document.getElementById('t-type').value;
-        document.getElementById('t-cat').innerHTML = cats[type].map(c => `<option value="${c}">${c}</option>`).join('');
-    }
-
-    function saveEntry() {
-        const amt = document.getElementById('t-amount').value;
-        const date = document.getElementById('t-date').value;
-        if(!amt || !date) return;
-        data.push({ id: Date.now(), date, type: document.getElementById('t-type').value, cat: document.getElementById('t-cat').value, amt: document.getElementById('t-type').value === 'expense' ? -Math.abs(amt) : Math.abs(amt) });
-        data.sort((a,b) => new Date(b.date) - new Date(a.date));
-        localStorage.setItem('fin_data', JSON.stringify(data));
-        document.getElementById('t-amount').value = '';
-        switchTab('home', document.querySelector('.nav-item'));
-    }
-
-    function downloadMonthlyCSV() {
-        const selectedMonth = document.getElementById('export-month').value; // format: "YYYY-MM"
-        if (!selectedMonth) return alert("Please select a month");
-        
-        const filtered = data.filter(d => d.date.startsWith(selectedMonth));
-        if (filtered.length === 0) return alert("No records found for " + selectedMonth);
-
-        let csv = "Date,Category,Type,Amount\n" + filtered.map(d => `${d.date},${d.cat},${d.type},${d.amt}`).join("\n");
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `Report_${selectedMonth}.csv`;
-        a.click();
-    }
-
-    function refreshUI() {
-        const hList = document.getElementById('history-list');
-        hList.innerHTML = '';
-        let bal = 0, spentMonth = 0, cData = {};
-        const monthStr = new Date().toISOString().slice(0, 7);
-        const search = document.getElementById('hist-search').value.toLowerCase();
-
-        data.forEach(item => {
-            bal += item.amt;
-            if (item.date.startsWith(monthStr) && item.type === 'expense') {
-                spentMonth += Math.abs(item.amt);
-                cData[item.cat] = (cData[item.cat] || 0) + Math.abs(item.amt);
-            }
-            if(item.cat.toLowerCase().includes(search)) {
-                hList.innerHTML += `<div class="list-item"><div><strong>${item.cat}</strong><br><small>${item.date}</small></div>
-                <div style="text-align:right"><span style="color:${item.amt > 0 ? 'var(--income)':'var(--expense)'}">₹${Math.abs(item.amt)}</span><br>
-                <small onclick="deleteItem(${item.id})" style="cursor:pointer; color:#9ca3af;">Delete</small></div></div>`;
-            }
-        });
-
-        document.getElementById('total-balance').innerText = `₹${bal.toLocaleString('en-IN')}`;
-        const pct = Math.min((spentMonth / budget) * 100, 100);
-        document.getElementById('prog-bar').style.width = pct + "%";
+        <input type="

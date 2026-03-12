@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Finance Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb; --income: #22c55e; --expense: #ef4444; 
+            --warning: #f59e0b; --bg: #f8fafc; --card: #ffffff; 
+            --text: #1e293b; --border: #e2e8f0; --danger: #dc2626;
+        }
+        [data-theme="dark"] {
+            --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --border: #334155;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; transition: 0.3s; display: flex; flex-direction: column; align-items: center; }
+        
+        .header-controls { width: 100%; max-width: 500px; display: flex; justify-content: flex-end; margin-bottom: 10px; }
+        .mode-toggle { cursor: pointer; padding: 8px 12px; border-radius: 20px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 0.8rem; font-weight: bold; }
+
+        #reminder-banner { width: 100%; max-width: 500px; background: var(--warning); color: white; padding: 12px; border-radius: 10px; margin-bottom: 15px; display: none; text-align: center; font-weight: bold; }
+        
+        .container { width: 100%; max-width: 500px; background: var(--card); padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid var(--border); }
+        .balance-card { background: linear-gradient(135deg, #1e293b, #334155); color: white; padding: 25px; border-radius: 15px; text-align: center; margin-bottom: 25px; border: none; }
+        .stats { display: flex; justify-content: space-around; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
+        
+        .chart-container { margin: 20px 0; height: 220px; }
+
+        .input-group { margin-bottom: 12px; }
+        label { display: block; font-size: 0.75rem; color: #94a3b8; margin-bottom: 4px; font-weight: bold; }
+        input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; background: var(--card); color: var(--text); }
+        
+        .search-input { background: var(--bg); border: 1px solid var(--border); margin-top: 15px; width:100%; padding: 10px; border-radius: 8px; box-sizing: border-box; color: var(--text); }
+        
+        .btn-add { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .footer-btns { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-secondary { flex: 1; padding: 10px; background: transparent; color: var(--text); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 0.8rem; }
+        .btn-reset { color: var(--danger); border-color: var(--danger); }
+        
+        .history { margin-top: 15px; max-height: 200px; overflow-y: auto; }
+        .transaction { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid var(--border); align-items: center; }
+        .inc { border-left: 4px solid var(--income); }
+        .exp { border-left: 4px solid var(--expense); }
+        .future { opacity: 0.5; }
+        .delete-btn { color: #94a3b8; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="header-controls">
+    <button class="mode-toggle" onclick="toggleTheme()" id="themeBtn">🌙 Dark Mode</button>
+</div>
+
+<div id="reminder-banner">
+    ⚠️ Reminder: Scheduled expenses are due today!
+    <button onclick="this.parentElement.style.display='none'" style="background:none; border:1px solid white; color:white; cursor:pointer; margin-left:10px;">OK</button>
+</div>
+
+<div class="container">
+    <h2 style="text-align:center; margin-top:0;">Finance Tracker</h2>
+
+    <div class="balance-card">
+        <small>Available Balance</small>
+        <h1 id="balance">₹0.00</h1>
+        <div class="stats">
+            <div><small>Income</small><div id="money-plus" style="color: #4ade80;">₹0</div></div>
+            <div><small>Expenses</small><div id="money-minus" style="color: #fb7185;">₹0</div></div>
+        </div>
+    </div>
+
+    <div class="chart-container"><canvas id="expenseChart"></canvas></div>
+
+    <div class="input-group"><label>Date</label><input type="date" id="date"></div>
+    <div class="input-group">
+        <label>Type</label>
+        <select id="type" onchange="updateCategories()">
+            <option value="income">Income (+)</option>
+            <option value="expense" selected>Expense (-)</option>
+        </select>
+    </div>
+    <div class="input-group"><label>Category</label><select id="category"></select></div>
+    <div class="input-group"><label>Amount (₹)</label><input type="number" id="amount" placeholder="0.00"></div>
+
+    <button class="btn-add" onclick="addTransaction()">Add Entry</button>
+
+    <input type="text" id="search" class="search-input" placeholder="🔍 Search categories..." onkeyup="updateUI()">
+
+    <div class="history"><div id="list"></div></div>
+
+    <div class="footer-btns">
+        <button class="btn-secondary" onclick="downloadCSV()">Export CSV</button>
+        <button class="btn-secondary btn-reset" onclick="clearData()">Reset Data</button>
+    </div>
+</div>
+
+<script>
+    let myChart = null;
+    const list = document.getElementById('list');
+    const dateInput = document.getElementById('date');
+    const typeInput = document.getElementById('type');
+    const categoryInput = document.getElementById('category');
+    const amountInput = document.getElementById('amount');
+    const searchInput = document.getElementById('search');
+    const reminderBanner = document.getElementById('reminder-banner');
+
+    dateInput.valueAsDate = new Date();
+
+    const categories = {
+        income: ['Salary', 'Freelance', 'Business', 'Investment', 'Other'],
+        expense: ['Food', 'Rent/Bills', 'Travel', 'Shopping', 'Health', 'Education', 'Personal']
+    };
+
+    let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+    let currentTheme = localStorage.getItem('theme') || 'light';
+
+    function toggleTheme() {
+        currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        localStorage.setItem('theme', currentTheme);
+        document.getElementById('themeBtn').innerText = currentTheme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode';
+        updateUI();
+    }
+
+    function updateCategories() {
+        const type = typeInput.value;
+        categoryInput.innerHTML = categories[type].map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+
+    function addTransaction() {
+        if (!amountInput.value || !dateInput.value) return alert('Fill all fields');
+        const transaction = {
+            id: Date.now(),
+            date: dateInput.value,
+            category: categoryInput.value,
+            amount: typeInput.value === 'expense' ? -Math.abs(+amountInput.value) : Math.abs(+amountInput.value),
+            type: typeInput.value
+        };
+        transactions.push(transaction);
+        transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+        updateUI();
+        amountInput.value = '';
+    }
+
+    function removeTransaction(id) {
+        transactions = transactions.filter(t => t.id !== id);
+        updateUI();
+    }
+
+    function clearData() {
+        if (confirm("Are you sure? This will delete all your recorded history permanently!")) {
+            transactions = [];
+            updateUI();
+        }
+    }
+
+    function updateChart(expenseData) {
+        const ctx = document.getElementById('expenseChart').getContext('2d');
+        if (myChart) myChart.destroy();
+        if (Object.keys(expenseData).length === 0) return;
+
+        myChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(expenseData),
+                datasets: [{
+                    data: Object.values(expenseData),
+                    backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { 
+                    legend: { 
+                        position: 'bottom', 
+                        labels: { color: currentTheme === 'dark' ? '#f8fafc' : '#1e293b', boxWidth: 10 } 
+                    } 
+                }
+            }
+        });
+    }
+
+    function updateUI() {
+        localStorage.setItem('transactions', JSON.stringify(transactions));
+        list.innerHTML = '';
+        let total = 0, inc = 0, exp = 0;
+        let expenseBreakdown = {};
+        const today = new Date().toISOString().split('T')[0];
+        const searchTerm = searchInput.value.toLowerCase();
+        let hasDueReminder = false;
+
+        transactions.forEach(t => {
+            const isFuture = t.date > today;
+            const matchesSearch = t.category.toLowerCase().includes(searchTerm);
+
+            if (t.date <= today) {
+                total += t.amount;
+                if (t.amount > 0) inc += t.amount;
+                else {
+                    exp += t.amount;
+                    expenseBreakdown[t.category] = (expenseBreakdown[t.category] || 0) + Math.abs(t.amount);
+                    if(t.date === today) hasDueReminder = true;
+                }
+            }
+
+            if (matchesSearch) {
+                const item = document.createElement('div');
+                item.className = `transaction ${t.amount < 0 ? 'exp' : 'inc'} ${isFuture ? 'future' : ''}`;
+                item.style.paddingLeft = "10px";
+                item.innerHTML = `
+                    <div><strong>${t.category} ${isFuture ? '⏳' : ''}</strong><small style="display:block; color:#94a3b8; font-size:0.7rem;">${t.date}</small></div>
+                    <div><span style="font-weight:bold">₹${Math.abs(t.amount)}</span>
+                    <span class="delete-btn" onclick="removeTransaction(${t.id})"> &nbsp;×</span></div>
+                `;
+                list.appendChild(item);
+            }
+        });
+
+        document.getElementById('balance').innerText = `₹${total.toLocaleString('en-IN')}`;
+        document.getElementById('money-plus').innerText = `₹${inc.toLocaleString('en-IN')}`;
+        document.getElementById('money-minus').innerText = `₹${Math.abs(exp).toLocaleString('en-IN')}`;
+        
+        reminderBanner.style.display = hasDueReminder ? 'block' : 'none';
+        updateChart(expenseBreakdown);
+    }
+
+    function downloadCSV() {
+        if (transactions.length === 0) return alert("No data to export!");
+        let csv = "Date,Category,Type,Amount\n" + transactions.map(t => `${t.date},${t.category},${t.type},${t.amount}`).join("\n");
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `Expense_Report.csv`; a.click();
+    }
+
+    document.documentElement.setAttribute('data-theme', currentTheme);
+    document.getElementById('themeBtn').innerText = currentTheme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode';
+    
+    updateCategories();
+    updateUI();
+</script>
+</body>
+</html>
